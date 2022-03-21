@@ -23,6 +23,6 @@ Django REST framework 框架是一个用于构建Web api的强大而灵活的工
 
 回归正传 🤌 look down 🧐
 
-master分支 🌹
+dev1分支 🌹
 
 ### 项目初始化

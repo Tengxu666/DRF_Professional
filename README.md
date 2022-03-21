@@ -26,3 +26,42 @@ Django REST framework 框架是一个用于构建Web api的强大而灵活的工
 dev1分支 🌹
 
 ### 项目初始化
+
+#### Setting.py
+
+```python
+
+INSTALLED_APPS = [
+    'rest_framework',
+    'rest_framework.authtoken'
+]
+
+```
+
+
+```python
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 100,
+    'DATETIME_FORMAT': '%Y-%m-%d %H:%M:%S',
+    'DEFAULT_RENDER_CLASSES': [
+        'rest_framework.renders.JSONRenderer',
+        'rest_framework.renders.BrowsableAPIRenderer',
+    ],
+    'DEFAULT_PARSER_CLASSES': [
+        'rest_framework.parsers.JSONParser',
+        'rest_framework.parsers.FormParser',
+        'rest_framework.parsers.MultiPartParser',
+    ]
+  }
+```
+

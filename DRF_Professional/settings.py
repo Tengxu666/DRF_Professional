@@ -26,7 +26,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'apps.user',
+    'rest_framework.authtoken'
 ]
+
+# User model
+AUTH_USER_MODEL = "user.User"
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -37,6 +43,22 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+
+# Rest Framework
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 100,
+    'DATETIME_FORMAT': '%Y-%m-%d %H:%M:%S',
+    # 异常返回格式控制
+    'EXCEPTION_HANDLER': 'utils.exception.custom_exception_handler',
+}
+
 
 ROOT_URLCONF = 'DRF_Professional.urls'
 
@@ -60,14 +82,16 @@ WSGI_APPLICATION = 'DRF_Professional.wsgi.application'
 
 
 # Database
-
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'DRF_TEST1',
+        'USER': 'root',
+        'PASSWORD': '12345678',
+        'HOST': '127.0.0.1',
+        'PORT': '3306'
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators

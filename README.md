@@ -284,3 +284,94 @@ class UserSigninAPIView(GenericAPIView):
         )
 ```
 api接口继承自GenericAPIView基础类，并重写post方法完成登录的校验
+
+### Permissions权限验证
+
+**官方解释：**
+
+> 权限检查总是在视图的最开始运行，然后才允许其他代码继续。权限检查通常使用请求中的身份验证信息。用户和请求。验证属性，以确定传入请求是否应被允许。  权
+> 限用于授予或拒绝不同类型的用户对API不同部分的访问。  
+> 最简单的权限样式是允许访问任何经过身份验证的用户，拒绝访问任何未经身份验证的用户。这对应于REST框架中的IsAuthenticated类。
+
+其实意思很简单就是你把权限验证加上，如果写单个的接口（直接def或者继承单一的generics类）这样就可以验证所有用户访问，如果用户没有权限，那就会401
+
+如果是直接继承ModelViewSet 生成标准的restful接口时，你只想让普通用户使用get接口，其他类型接口也可以对对应的权限验证 🐂🐂🐂
+
+#### DRF提供的几种权限验证类型
+
+- AllowAny：允许不受限制的访问，不管请求是否经过了身份验证。
+- IsAuthenticated：拒绝任何未经身份验证的用户的权限，而允许其他用户的权限。如果您希望您的API仅对注册用户可访问，则此权限是合适的。
+- IsAdminUser：拒绝任何用户的权限，除非use.is_staff为True，在这种情况下允许访问。
+- IsAuthenticatedOrReadOnly：允许经过身份验证的用户执行任何请求。对于未获授权用户的请求，会被允许GET、HEAD或OPTIONS。
+
+#### permission_classes的几种定义
+
+##### 在接口类中的使用
+
+```python
+class UserSigninAPIView(GenericAPIView):
+    permission_classes = [IsAdminUser]
+    ...
+    ...
+```
+
+##### 在方法中使用
+
+drf提供了permission_classes装饰器来方便你的使用
+```python
+@permission_classes([IsAdminUser])
+def user_signin(request):
+    pass
+```
+
+##### 自定义权限认证类
+
+因为使用drf默认的验证类时，在Postman等类似平台进行接口测试容易引发CSRF认证错误❌，所以自定义验证类。
+
+自定义验证类需要继承自permissions.BasePermission，并且重写has_permission方法来定义您自己的验证类
+
+has_permission方法return True或者False
+
+```python
+class IsMyUser(permissions.BasePermission):
+    """
+    仅允许Token验证成功的用户访问
+    """
+
+    default_error_messages = {
+        'invalid__token': 'token无效'
+    }
+
+    def has_permission(self, request, view):
+        token = request.META.get("HTTP_TOKEN")
+        user_token = Token.objects.filter(key=token).first()
+        if not user_token:
+            raise ParamsException(self.default_error_messages['invalid__token'], 401)
+        if timezone.now() > (user_token.created + timedelta(days=TOKEN_LIFETIME)):
+            raise ParamsException(self.default_error_messages['invalid__token'], 401)
+        return True
+
+```
+
+##### 自定义接口类中权限验证
+
+如果你在一个接口类中定义了多个接口，但是你想让不同的用户访问到不同类型的接口，您就需要重写接口类中的get_permissions方法
+
+以下面接口为例
+
+ModelViewSet中会有list、retrieve、create...等方法，你可以在get_permissions通过self.action来获得他们并指定这些接口可访问的用户
+
+```python
+class VideoModelViewSet(ModelViewSet):
+    serializer_class = VideoSerializer
+    queryset = Video.objects.all()
+
+    def get_permissions(self):
+        if self.action == "retrieve":
+            return [IsExeUser()]
+        return [IsAdmin()]
+    ...
+    ...
+```
+
+

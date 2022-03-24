@@ -297,16 +297,14 @@ api接口继承自GenericAPIView基础类，并重写post方法完成登录的�
 
 如果是直接继承ModelViewSet 生成标准的restful接口时，你只想让普通用户使用get接口，其他类型接口也可以对对应的权限验证 🐂🐂🐂
 
-#### DRF提供的几种权限验证类型
+#### DRF提供的权限验证类型
 
 - AllowAny：允许不受限制的访问，不管请求是否经过了身份验证。
 - IsAuthenticated：拒绝任何未经身份验证的用户的权限，而允许其他用户的权限。如果您希望您的API仅对注册用户可访问，则此权限是合适的。
 - IsAdminUser：拒绝任何用户的权限，除非use.is_staff为True，在这种情况下允许访问。
 - IsAuthenticatedOrReadOnly：允许经过身份验证的用户执行任何请求。对于未获授权用户的请求，会被允许GET、HEAD或OPTIONS。
 
-#### permission_classes的几种定义
-
-##### 在接口类中的使用
+#### 在接口类中的使用
 
 ```python
 class UserSigninAPIView(GenericAPIView):
@@ -315,7 +313,7 @@ class UserSigninAPIView(GenericAPIView):
     ...
 ```
 
-##### 在方法中使用
+#### 在方法中使用
 
 drf提供了permission_classes装饰器来方便你的使用
 ```python
@@ -324,7 +322,7 @@ def user_signin(request):
     pass
 ```
 
-##### 自定义权限认证类
+#### 自定义权限认证类
 
 因为使用drf默认的验证类时，在Postman等类似平台进行接口测试容易引发CSRF认证错误❌，所以自定义验证类。
 
@@ -353,7 +351,7 @@ class IsMyUser(permissions.BasePermission):
 
 ```
 
-##### 自定义接口类中权限验证
+#### 自定义接口类中权限验证
 
 如果你在一个接口类中定义了多个接口，但是你想让不同的用户访问到不同类型的接口，您就需要重写接口类中的get_permissions方法
 
@@ -374,4 +372,115 @@ class VideoModelViewSet(ModelViewSet):
     ...
 ```
 
+### DRF写出优美的logs
+
+Django使用并扩展了Python的内置logging模块来执行系统日志。
+一份 Python logging 可以有下面三个部分组成：
+
+- Loggers：当 logger 处理一条消息时，会将自己的日志级别和这条消息的日志级别做对比。如果消息的日志级别匹配或者高于 logger 的日志级别，它就会被进一步处理。否则这条消息就会被忽略掉。当logger 确定了一条消息需要处理之后，会把它传给 Handler。
+- Handlers：handler可以帮助logger将日志写入到文件中
+- Formatters：在这里你可以规定日志写入到文件的格式
+
+**例子**
+
+```python
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        }
+    },
+    'loggers': {
+        '': {
+            'handlers': ['write'],
+            'level': 'INFO',
+        }
+    },
+    'handlers': {
+        'write': {
+            'filename': 'logs/debug.log',
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            # 日志文件大小：5M
+            'maxBytes': 5 * 1024 * 1024,
+            'encoding': "utf-8",
+            'formatter': 'verbose'
+        }
+    }
+}
+```
+这样的话每当有请求时，Django就会自动的把log记录到你的logs/debug.log文件中✅✅
+ 
+ 
+#### 自定义日志记录配置
+
+记录优美的log是每一个程序员的追求✌️✌️✌️
+
+如果你想要来配置自己的个性话log的，你需要通过自定义中间件来实现
+
+直接上代码 👴
+
+自定义日志中间件
+```python
+from __future__ import unicode_literals
+import logging
+import time
+
+class LoggingMiddleware(object):
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        try:
+            res = response.data
+        except Exception:
+            res = None
+        if request.method != 'GET':
+            localtime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+            logging.info("{} {} {} {} {} {}\nres:{}".format(
+                localtime, request.user, request.method, request.path,
+                response.status_code, response.reason_phrase, res))
+        return response
+```
+
+settings.py中间件的引入
+
+```python
+MIDDLEWARE = [
+     ...
+     ...
+    'utils.LoggingMiddleware.LoggingMiddleware'
+]
+```
+
+LOGGING配置
+
+```python
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'loggers': {
+        '': {
+            'handlers': ['write'],
+            'level': 'DEBUG',
+        }
+    },
+    'handlers': {
+        'write': {
+            'filename': 'logs/debug.log',
+            'level': 'DEBUG',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'maxBytes': 5 * 1024 * 1024,
+            'encoding': "utf-8"
+        }
+    }
+}
+```
+
+这样的话你就能拥有你自己优美的log啦
+<img width="1126" alt="image" src="https://user-images.githubusercontent.com/102028148/159929522-d200839d-78ab-4a62-8585-64d29e65b2ea.png">
 

@@ -21,7 +21,7 @@ class User(AbstractUser):
         return self.nickname
 
     def __str__(self):
-        return self.nickname
+        return self.username
 
     class Meta:
         # 默认id升序排序

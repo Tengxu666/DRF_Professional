@@ -14,7 +14,7 @@ SECRET_KEY = 'django-insecure-e-%e@-13@_+dcsnhpx)2vu!v71o69*2evdl893%($-vzecy8k2
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -42,6 +42,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'utils.LoggingMiddleware.LoggingMiddleware'
 ]
 
 
@@ -52,6 +53,7 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.TokenAuthentication',
     ],
+    # 'DEFAULT_RENDERER_CLASSES': ('rest_framework.renderers.JSONRenderer', ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 100,
     'DATETIME_FORMAT': '%Y-%m-%d %H:%M:%S',
@@ -131,3 +133,37 @@ STATIC_URL = 'static/'
 # Default primary key field type
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# logs
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        }
+    },
+    'loggers': {
+        # log打印sql
+        # 'django.db.backends': {
+        #     'handlers': ['write'],
+        #     'level': 'DEBUG',
+        # },
+        '': {
+            'handlers': ['write'],
+            'level': 'INFO',
+        }
+    },
+    'handlers': {
+        'write': {
+            'filename': 'logs/debug.log',
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            # 日志文件大小：5M
+            'maxBytes': 5 * 1024 * 1024,
+            'encoding': "utf-8"
+        }
+    }
+}

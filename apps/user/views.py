@@ -1,3 +1,5 @@
+from django.contrib.auth import login
+from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework.generics import CreateAPIView, GenericAPIView
@@ -24,7 +26,7 @@ class UserSignupAPIView(CreateAPIView):
 
 
 class UserSigninAPIView(GenericAPIView):
-    authentication_classes = ()
+
     permission_classes = ()
     serializer_class = UserSigninSerializer
 
@@ -34,8 +36,9 @@ class UserSigninAPIView(GenericAPIView):
         user = serializer.user
 
         token, _ = Token.objects.get_or_create(user=user)
-        data = {"code": 200, "msg": "成功", "data": {"token": token.key, "nickname": user.nickname}}
+        login(request, user)
 
+        data = {"code": 200, "msg": "成功", "data": {"token": token.key, "nickname": user.nickname}}
         return Response(
             data=data,
             status=status.HTTP_200_OK
